@@ -1,0 +1,30 @@
+---
+
+  - name: Устанавливаем java
+    package:
+      name: java-11-openjdk
+      state: present
+
+  - name: Создаем пользователя kafka
+    user:
+      name: kafka
+      home: /usr/local/kafka
+
+  - name: Скачиваем и распаковываем бинарники
+    unarchive:
+      src: kafka_2.12-3.2.0.tgz
+      dest: /usr/local/kafka
+      owner: kafka
+
+  - name: Меняем настроки listeners
+    lineinfile:
+      path: /usr/local/kafka/kafka_2.12-3.2.0/config/server.properties
+      insertafter: '^#listeners='
+      line: 'listeners=PLAINTEXT://{{ansible_priv_ip}}:9092'
+
+  - name: Запускаем Zookeeper
+    shell: cd /usr/local/kafka/kafka_2.12-3.2.0 && bin/zookeeper-server-start.sh -daemon config/zookeeper.properties
+
+  - name: Запускаем kafka
+    shell: cd /usr/local/kafka/kafka_2.12-3.2.0 && bin/kafka-server-start.sh -daemon config/server.properties
+    
